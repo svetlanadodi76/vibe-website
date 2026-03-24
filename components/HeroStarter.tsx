@@ -53,6 +53,13 @@ export default function HeroStarter() {
             >
               Contactează-ne
             </a>
+            <a
+              href="/rezervari"
+              className="inline-block px-8 py-4 font-semibold rounded-xl transition-transform duration-150 hover:scale-105 active:scale-95 border-2"
+              style={{ color: "#FDF6EC", borderColor: "rgba(253,246,236,0.6)", background: "rgba(253,246,236,0.1)" }}
+            >
+              Rezervă o masă
+            </a>
           </div>
         </div>
 
