@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 // Ore din 30 în 30, 10:00–22:00
 const ORE_DISPONIBILE: string[] = [];
@@ -37,11 +37,20 @@ export default function FormularRezervare() {
   const [eroare, setEroare] = useState('');
   const [incarcare, setIncarcare] = useState(false);
   const [luna, setLuna] = useState(new Date(azi.getFullYear(), azi.getMonth(), 1));
-
   const [date, setDate] = useState({
     data: '', ora: '', numar_persoane: 2,
     nume: '', email: '', telefon: '',
   });
+
+  const [oreOcupate, setOreOcupate] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (pas === 2 && date.data) {
+      fetch(`/api/rezervari/ore-ocupate?data=${date.data}`)
+        .then(r => r.json())
+        .then(r => setOreOcupate(r.ore || []));
+    }
+  }, [pas, date.data]);
 
   const mergeLaPas = (n: number) => { setEroare(''); setPas(n); };
 
@@ -215,18 +224,41 @@ export default function FormularRezervare() {
         {pas === 2 && (
           <div>
             <h2 className="text-xl font-bold text-white mb-1">Alege ora</h2>
-            <p className="text-sm mb-5" style={{ color: '#5EEAD4' }}>{formatAfisat(date.data)}</p>
+            <p className="text-sm mb-3" style={{ color: '#5EEAD4' }}>{formatAfisat(date.data)}</p>
+
+            {/* Legenda */}
+            <div className="flex gap-4 mb-4 text-xs" style={{ color: 'rgba(255,255,255,0.6)' }}>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full inline-block" style={{ background: '#14B8A6' }} /> Disponibil
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full inline-block" style={{ background: 'rgba(255,255,255,0.15)' }} /> Ocupat
+              </span>
+              <span className="flex items-center gap-1">
+                <span className="w-3 h-3 rounded-full inline-block" style={{ background: '#F97316' }} /> Selectat
+              </span>
+            </div>
 
             <div className="grid grid-cols-4 gap-2 mb-6">
-              {ORE_DISPONIBILE.map((ora) => (
-                <button key={ora} onClick={() => setDate({ ...date, ora })}
-                  className="py-3 rounded-xl font-medium text-sm transition-all hover:scale-105"
-                  style={date.ora === ora
-                    ? { background: '#F97316', color: 'white', boxShadow: '0 4px 12px rgba(249,115,22,0.4)' }
-                    : { ...glass, color: 'rgba(255,255,255,0.8)' }}>
-                  {ora}
-                </button>
-              ))}
+              {ORE_DISPONIBILE.map((ora) => {
+                const ocupat = oreOcupate.includes(ora);
+                const selectat = date.ora === ora;
+                return (
+                  <button key={ora}
+                    disabled={ocupat}
+                    onClick={() => !ocupat && setDate({ ...date, ora })}
+                    className="py-3 rounded-xl font-medium text-sm transition-all"
+                    style={
+                      selectat
+                        ? { background: '#F97316', color: 'white', boxShadow: '0 4px 12px rgba(249,115,22,0.4)' }
+                        : ocupat
+                        ? { background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.2)', cursor: 'not-allowed', textDecoration: 'line-through' }
+                        : { background: 'rgba(20,184,166,0.15)', color: '#5EEAD4', border: '1px solid rgba(20,184,166,0.3)' }
+                    }>
+                    {ora}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="flex gap-3">

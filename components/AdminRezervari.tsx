@@ -41,6 +41,7 @@ export default function AdminRezervari() {
   const [filtru, setFiltru] = useState<Filtru>('toate');
   const [cautare, setCautare] = useState('');
   const [actiune, setActiune] = useState<number | null>(null);
+  const [dataSelectata, setDataSelectata] = useState(() => new Date().toISOString().slice(0, 10));
 
   const incarcaRezervari = async () => {
     setIncarcare(true);
@@ -81,8 +82,51 @@ export default function AdminRezervari() {
 
   const numar = (f: Filtru) => f === 'toate' ? rezervari.length : rezervari.filter(r => r.status === f).length;
 
+  const confirmatePeData = rezervari.filter(
+    (r) => r.data === dataSelectata && r.status === 'confirmat'
+  ).sort((a, b) => a.ora.localeCompare(b.ora));
+
   return (
     <div>
+      {/* WIDGET REZERVĂRI PE DATĂ */}
+      <div className="rounded-2xl p-6 mb-8" style={glass}>
+        <div className="flex flex-col md:flex-row md:items-center gap-4 mb-5">
+          <div>
+            <h2 className="text-white font-bold text-lg">Rezervări confirmate pe dată</h2>
+            <p className="text-white/40 text-sm">Selectează o dată pentru a vedea orele ocupate</p>
+          </div>
+          <input
+            type="date"
+            value={dataSelectata}
+            onChange={(e) => setDataSelectata(e.target.value)}
+            className="md:ml-auto px-4 py-2 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-teal-400"
+            style={{ ...glass, colorScheme: 'dark' }}
+          />
+        </div>
+
+        {confirmatePeData.length === 0 ? (
+          <p className="text-white/30 text-sm">Nicio rezervare confirmată pe {formatData(dataSelectata)}.</p>
+        ) : (
+          <>
+            <p className="text-white/60 text-sm mb-4">
+              <span style={{ color: '#5EEAD4', fontWeight: 700 }}>{confirmatePeData.length}</span>
+              {' '}rezerv{confirmatePeData.length === 1 ? 'are confirmată' : 'ări confirmate'} pe{' '}
+              <span className="text-white">{formatData(dataSelectata)}</span>
+            </p>
+            <div className="flex flex-wrap gap-3">
+              {confirmatePeData.map((r) => (
+                <div key={r.id} className="rounded-xl px-4 py-3 min-w-[120px]"
+                  style={{ background: 'rgba(20,184,166,0.12)', border: '1px solid rgba(20,184,166,0.3)' }}>
+                  <p className="text-teal-300 font-bold text-lg">{r.ora.slice(0, 5)}</p>
+                  <p className="text-white/70 text-xs mt-0.5">{r.nume}</p>
+                  <p className="text-white/40 text-xs">👥 {r.numar_persoane} pers.</p>
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+
       {/* FILTRE + CĂUTARE */}
       <div className="flex flex-col md:flex-row gap-4 mb-6">
         {/* Căutare */}
